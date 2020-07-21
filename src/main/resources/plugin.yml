@@ -1,0 +1,10 @@
+name: MinecraftNOC
+version: ${project.version}
+main: com.opennms.minecraftnoc.MinecraftNOC
+api-version: 1.15
+authors: [XeroCrossing]
+description: In-game OpenNMS NOC screens
+
+commands:
+  getpng:
+    description: Fetch a PNG from the specified URL
