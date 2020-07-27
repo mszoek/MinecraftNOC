@@ -8,3 +8,5 @@ description: In-game OpenNMS NOC screens
 commands:
   getpng:
     description: Fetch a PNG from the specified URL
+  getmetric:
+    description: Fetch a metric text from the specified URL

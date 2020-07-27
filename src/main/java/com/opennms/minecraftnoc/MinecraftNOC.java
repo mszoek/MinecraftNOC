@@ -7,8 +7,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class MinecraftNOC extends JavaPlugin {
 
-    private GrafanaClientImpl grafanaClient;
-
     @Override
     public void onEnable() {
         // Plugin startup logic
@@ -16,13 +14,10 @@ public final class MinecraftNOC extends JavaPlugin {
         getConfig().options().copyDefaults();
         saveDefaultConfig();
 
-        FileConfiguration config = getConfig();
-        grafanaClient = new GrafanaClientImpl(config.get("grafana.baseurl").toString(),
-                config.get("grafana.apikey").toString());
-
         PluginManager pm = Bukkit.getPluginManager();
         pm.registerEvents(new ClickListener(this), this);
         getCommand("getpng").setExecutor(new CommandGetPNG(this));
+        getCommand("getmetric").setExecutor(new CommandGetMetric(this));
     }
 
     @Override
