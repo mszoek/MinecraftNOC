@@ -1,7 +1,7 @@
 grafana:
-  baseurl: https://nms02.internal.opennms.com/grafana/
-  dashboard: tMHLP27Mz/sortova-farm-temperatures
+  baseurl: https://localhost/grafana/
+  dashboard: xxx/some-dashboard
   apikey: 12345
 metrics:
-  baseurl: http://dev.cloud.opennms.com/
+  baseurl: http://localhost/api/metrics/
   apikey: 12345
