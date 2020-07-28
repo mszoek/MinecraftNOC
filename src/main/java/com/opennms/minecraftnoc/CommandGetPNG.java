@@ -5,7 +5,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.BlockCommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.Calendar;
@@ -16,9 +15,7 @@ public class CommandGetPNG implements CommandExecutor {
     private final GrafanaClientImpl grafanaClient;
 
     public CommandGetPNG(MinecraftNOC main) {
-        FileConfiguration config = main.getConfig();
-        grafanaClient = new GrafanaClientImpl(config.get("grafana.baseurl").toString(),
-                config.get("grafana.apikey").toString());
+        grafanaClient = new GrafanaClientImpl(main);
     }
 
     public boolean onCommand(CommandSender cs, Command c, String label, String[] args) {
@@ -31,7 +28,7 @@ public class CommandGetPNG implements CommandExecutor {
             gcal.add(Calendar.MINUTE, -60);
             long then = gcal.getTimeInMillis() / 1000;
             p.sendMessage(ChatHelper.format("then = "+then+" now = "+now));
-            grafanaClient.renderPngForPanel("tMHLP27Mz/sortova-farm-temperatures","8",512,256,then,now,null);
+            grafanaClient.renderPngForPanel(args[0],"8",512,256,then,now,null);
             return true;
         } else {
             // Sender is console

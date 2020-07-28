@@ -9,8 +9,7 @@ public class CommandGetMetric implements CommandExecutor {
 
     public CommandGetMetric(MinecraftNOC main) {
         FileConfiguration config = main.getConfig();
-        metricsClient = new MetricsClientImpl(config.get("metrics.baseurl").toString(),
-                config.get("metrics.apikey").toString());
+        metricsClient = new MetricsClientImpl(main);
     }
 
     public boolean onCommand(CommandSender cs, Command c, String label, String[] args) {
@@ -18,7 +17,7 @@ public class CommandGetMetric implements CommandExecutor {
             Player p = (Player) cs;
 
             p.sendMessage(ChatHelper.format("Fetching metric value"));
-            metricsClient.getMetric("/");
+            metricsClient.getMetric(args[0]);
             return true;
         } else {
             // Sender is console

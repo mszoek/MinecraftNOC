@@ -5,3 +5,5 @@ grafana:
 metrics:
   baseurl: http://localhost/api/metrics/
   apikey: 12345
+signs:
+maps:

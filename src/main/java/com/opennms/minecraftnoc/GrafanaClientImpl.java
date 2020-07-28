@@ -41,8 +41,13 @@ import java.io.InputStream;
 import java.security.cert.CertificateException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import okhttp3.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Entity;
 import org.json.*;
 
 public class GrafanaClientImpl {
@@ -50,12 +55,14 @@ public class GrafanaClientImpl {
     private final OkHttpClient client;
     private final HttpUrl grafanaBaseUrl;
     private final String apiKey;
+    private final MinecraftNOC plugin;
 
-    public GrafanaClientImpl(String url, String key) {
-        grafanaBaseUrl = HttpUrl.parse(url);
-        apiKey = key;
+    public GrafanaClientImpl(MinecraftNOC main) {
+        FileConfiguration config = main.getConfig();
+        grafanaBaseUrl = HttpUrl.parse(config.get("grafana.baseurl").toString());
+        apiKey = config.get("grafana.apikey").toString();
+        plugin = main;
 
-        System.out.println("Grafana URL = "+url+" key = "+apiKey);
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(3, TimeUnit.SECONDS);
@@ -63,7 +70,7 @@ public class GrafanaClientImpl {
         client = builder.build();
     }
 
-    public CompletableFuture<byte[]> renderPngForPanel(String dashboardUid, String panelId, int width, int height, long from, long to, String utcOffset /*, Map<String, String> variables*/) {
+    public CompletableFuture<byte[]> renderPngForPanel(String dashboardUid, String panelId, int width, int height, long from, long to, String utcOffset) {
         final HttpUrl.Builder builder = grafanaBaseUrl.newBuilder()
                 .addPathSegment("render")
                 .addPathSegment("d-solo")
@@ -81,7 +88,6 @@ public class GrafanaClientImpl {
         if (!Strings.isNullOrEmpty(utcOffset)) {
             builder.addQueryParameter("tz", utcOffset);
         }
-//        variables.forEach((k,v) -> builder.addQueryParameter("var-"+ k, v));
 
         final Request request = new Request.Builder()
                 .url(builder.build())
@@ -107,7 +113,7 @@ public class GrafanaClientImpl {
                     }
 
                     try (InputStream is = responseBody.byteStream()) {
-                        future.complete(inputStreamToByteArray(is));
+                        future.complete(inputStreamToByteArray(is, plugin.getCurrentEntity(), plugin.getConfig()));
                     } catch (IOException e) {
                         future.completeExceptionally(e);
                     }
@@ -117,7 +123,7 @@ public class GrafanaClientImpl {
         return future;
     }
 
-    private static byte[] inputStreamToByteArray(InputStream is) throws IOException {
+    private static byte[] inputStreamToByteArray(InputStream is, Entity ent, FileConfiguration cfg) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         int nRead;
         byte[] data = new byte[1024];
@@ -125,6 +131,19 @@ public class GrafanaClientImpl {
             buffer.write(data, 0, nRead);
         }
         buffer.flush();
+
+        Location loc = ent.getLocation();
+        int X = loc.getBlockX();
+        int Y = loc.getBlockY();
+        int Z = loc.getBlockZ();
+        String pos = X + "," + Y + "," + Z;
+        Bukkit.getLogger().log(Level.WARNING, "Setting entity at " + pos);
+
+        // save the image file and set it as the custom map image
+
+        String path = "images." + pos;
+        cfg.set(path, "png"); // FIXME
+
         return buffer.toByteArray();
     }
 

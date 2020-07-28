@@ -45,14 +45,7 @@ public class ClickListener implements Listener {
             return;
         }
 
-        Entity ent = e.getEntity();
-        Location loc = ent.getLocation();
-        int X = loc.getBlockX();
-        int Y = loc.getBlockY();
-        int Z = loc.getBlockZ();
-        Bukkit.getLogger().log(Level.WARNING, "Clicked entity at " + X + "," + Y + "," + Z);
-
-        plugin.setCurrentEntity(ent);
+        plugin.setCurrentEntity(e.getEntity());
         p.sendMessage(ChatHelper.format("Current item set!"));
 
         e.setCancelled(true);
