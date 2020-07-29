@@ -8,6 +8,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.json.JSONObject;
+import org.json.JSONPointerException;
 import org.json.JSONTokener;
 
 import javax.net.ssl.SSLContext;
@@ -45,13 +46,14 @@ public class MetricsClientImpl {
         client = builder.build();
     }
 
-    public CompletableFuture<String> getMetric(String url) {
+    public CompletableFuture<String> getMetric(String title, String url, String jsonFilter) {
         final HttpUrl.Builder builder = metricBaseUrl.newBuilder()
-                .addPathSegment(url == null ? "/" : url);
+                .addPathSegment(url);
 
         final Request request = new Request.Builder()
                 .url(builder.build())
-                .addHeader("Authorization", "Bearer " + this.apiKey)
+                .addHeader("Authorization", "Basic " + this.apiKey)
+                .addHeader("Accept", "application/json")
                 .build();
 
         Location loc = plugin.getCurrentBlock().getLocation();
@@ -61,7 +63,8 @@ public class MetricsClientImpl {
         String pos = X + "," + Y + "," + Z;
 
         String path = "signs." + pos;
-        plugin.getConfig().set(path, url);
+        plugin.getConfig().set(path + ".title", title);
+        plugin.getConfig().set(path + ".url", url);
         plugin.saveConfig();
 
         final CompletableFuture<String> future = new CompletableFuture<>();
@@ -82,12 +85,13 @@ public class MetricsClientImpl {
 
                     try (InputStream is = responseBody.byteStream()) {
                         Block block = plugin.getCurrentBlock();
-                        future.complete(inputStreamToByteArray(is, block, plugin));
+                        future.complete(inputStreamToByteArray(is, jsonFilter));
                         plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
                             Sign s = (Sign)block.getState();
                             try {
                                 String buf = future.get();
-                                s.setLine(0, buf.substring(0, Math.min(buf.length(), 15)));
+                                s.setLine(0, title);
+                                s.setLine(2, buf.substring(0, Math.min(buf.length(), 15)));
                                 s.update();
                             } catch(InterruptedException | ExecutionException e) {
                                 Bukkit.getLogger().log(Level.SEVERE, e.getLocalizedMessage());
@@ -104,7 +108,7 @@ public class MetricsClientImpl {
         return future;
     }
 
-    private static String inputStreamToByteArray(InputStream is, Block block, MinecraftNOC plugin) throws IOException {
+    private static String inputStreamToByteArray(InputStream is, String jsonFilter) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         int nRead;
         byte[] data = new byte[1024];
@@ -112,7 +116,7 @@ public class MetricsClientImpl {
             buffer.write(data, 0, nRead);
         }
         buffer.flush();
-        return buffer.toString(Charset.defaultCharset());
+        return parseJsonResponse(buffer.toString(Charset.defaultCharset()), jsonFilter);
     }
 
     private static OkHttpClient.Builder configureToIgnoreCertificate(OkHttpClient.Builder builder) {
@@ -162,5 +166,15 @@ public class MetricsClientImpl {
             }
         }
         return response.body().string();
+    }
+
+    private static String parseJsonResponse(String jsonstr, String filter) {
+        final JSONTokener tokener = new JSONTokener(jsonstr);
+        final JSONObject json = new JSONObject(tokener);
+        try {
+            return json.query(filter).toString();
+        } catch(JSONPointerException e) {
+            return jsonstr;
+        }
     }
 }

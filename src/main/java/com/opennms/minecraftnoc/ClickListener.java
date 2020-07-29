@@ -27,6 +27,10 @@ public class ClickListener implements Listener {
     @EventHandler
     public void onEntityInteract(PlayerInteractEvent e) {
         if(e.getAction() == Action.LEFT_CLICK_AIR) {
+            if(e.getPlayer().getInventory().getItemInMainHand().getType() != Material.STICK) {
+                return;
+            }
+
             plugin.clearCurrentBlock();
             plugin.clearCurrentEntity();
             Player p = e.getPlayer();
@@ -60,12 +64,6 @@ public class ClickListener implements Listener {
 
        Block b = e.getBlock();
         if (b.getState() instanceof Sign) {
-            Location loc = b.getLocation();
-            int X = loc.getBlockX();
-            int Y = loc.getBlockY();
-            int Z = loc.getBlockZ();
-            Bukkit.getLogger().log(Level.WARNING, "Clicked block at " + X + "," + Y + "," + Z);
-
             plugin.setCurrentBlock(b);
             p.sendMessage(ChatHelper.format("Current block set!"));
 

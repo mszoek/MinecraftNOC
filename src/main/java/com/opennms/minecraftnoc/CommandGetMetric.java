@@ -17,7 +17,7 @@ public class CommandGetMetric implements CommandExecutor {
             Player p = (Player) cs;
 
             p.sendMessage(ChatHelper.format("Fetching metric value"));
-            metricsClient.getMetric(args[0]);
+            metricsClient.getMetric(args[0], args[1], args[2]);
             return true;
         } else {
             // Sender is console
