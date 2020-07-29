@@ -29,13 +29,13 @@ import java.util.logging.Level;
 public class MetricsClientImpl {
     private final Gson gson = new Gson();
     private final OkHttpClient client;
-    private final HttpUrl metricBaseUrl;
+    private final String metricBaseUrl;
     private final String apiKey;
     private final MinecraftNOC plugin;
 
     public MetricsClientImpl(MinecraftNOC main) {
         FileConfiguration config = main.getConfig();
-        metricBaseUrl = HttpUrl.parse(config.get("metrics.baseurl").toString());
+        metricBaseUrl = config.get("metrics.baseurl").toString();
         apiKey = config.get("metrics.apikey").toString();
         plugin = main;
 
@@ -47,11 +47,9 @@ public class MetricsClientImpl {
     }
 
     public CompletableFuture<String> getMetric(String title, String url, String jsonFilter) {
-        final HttpUrl.Builder builder = metricBaseUrl.newBuilder()
-                .addPathSegment(url);
-
+        HttpUrl finalUrl = HttpUrl.parse(metricBaseUrl + url);
         final Request request = new Request.Builder()
-                .url(builder.build())
+                .url(finalUrl)
                 .addHeader("Authorization", "Basic " + this.apiKey)
                 .addHeader("Accept", "application/json")
                 .build();
@@ -63,8 +61,10 @@ public class MetricsClientImpl {
         String pos = X + "," + Y + "," + Z;
 
         String path = "signs." + pos;
-        plugin.getConfig().set(path + ".title", title);
-        plugin.getConfig().set(path + ".url", url);
+        FileConfiguration config = plugin.getConfig();
+        config.set(path + ".title", title);
+        config.set(path + ".url", url);
+        config.set(path + ".filter", jsonFilter);
         plugin.saveConfig();
 
         final CompletableFuture<String> future = new CompletableFuture<>();
