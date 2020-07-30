@@ -1,9 +1,11 @@
 grafana:
-  baseurl: https://localhost/grafana/
+  baseurl: https://localhost/grafana/render/d-solo/
   dashboard: xxx/some-dashboard
   apikey: 12345
+  pngwidth: 256
+  pngheight: 256
 metrics:
   baseurl: http://localhost/api/metrics/
   apikey: 12345
 signs:
-maps:
+images:

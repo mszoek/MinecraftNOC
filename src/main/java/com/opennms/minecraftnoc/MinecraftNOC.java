@@ -3,12 +3,14 @@ package com.opennms.minecraftnoc;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
+import org.bukkit.map.MapRenderer;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class MinecraftNOC extends JavaPlugin {
     private Block currentBlock;
     private Entity currentEntity;
+    private NOCMapRenderer mapRenderer;
 
     @Override
     public void onEnable() {
@@ -20,8 +22,11 @@ public final class MinecraftNOC extends JavaPlugin {
 
         PluginManager pm = Bukkit.getPluginManager();
         pm.registerEvents(new ClickListener(this), this);
+        pm.registerEvents(new MapListener(this), this);
         getCommand("getpng").setExecutor(new CommandGetPNG(this));
         getCommand("getmetric").setExecutor(new CommandGetMetric(this));
+
+        mapRenderer = new NOCMapRenderer();
     }
 
     @Override
@@ -36,4 +41,6 @@ public final class MinecraftNOC extends JavaPlugin {
     public Entity getCurrentEntity() { return currentEntity; }
     public void setCurrentEntity(Entity ent) { currentEntity = ent; }
     public void clearCurrentEntity() { currentEntity = null; }
+
+    public NOCMapRenderer getMapRenderer() { return mapRenderer; }
 }

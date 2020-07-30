@@ -1,12 +1,10 @@
 package com.opennms.minecraftnoc;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,8 +12,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-
-import java.util.logging.Level;
+import org.bukkit.inventory.meta.MapMeta;
 
 public class ClickListener implements Listener {
     private MinecraftNOC plugin;
@@ -46,6 +43,11 @@ public class ClickListener implements Listener {
 
         Player p = (Player)e.getDamager();
         if(p.getInventory().getItemInMainHand().getType() != Material.STICK) {
+            return;
+        }
+
+        ItemFrame frame = (ItemFrame)e.getEntity();
+        if(frame.getItem().getType() != Material.FILLED_MAP) {
             return;
         }
 

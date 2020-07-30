@@ -1,6 +1,5 @@
 package com.opennms.minecraftnoc;
 
-import com.google.gson.Gson;
 import okhttp3.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -20,14 +19,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.security.cert.CertificateException;
-import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public class MetricsClientImpl {
-    private final Gson gson = new Gson();
     private final OkHttpClient client;
     private final String metricBaseUrl;
     private final String apiKey;

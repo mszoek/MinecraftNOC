@@ -28,18 +28,18 @@
 
 package com.opennms.minecraftnoc;
 
-import com.google.common.base.Strings;
-import com.google.gson.Gson;
-
+import javax.imageio.ImageIO;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import java.io.ByteArrayOutputStream;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.cert.CertificateException;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -47,20 +47,26 @@ import okhttp3.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Entity;
+import org.bukkit.entity.ItemFrame;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.MapMeta;
+import org.bukkit.map.MapPalette;
 import org.json.*;
 
 public class GrafanaClientImpl {
-    private final Gson gson = new Gson();
     private final OkHttpClient client;
     private final HttpUrl grafanaBaseUrl;
     private final String apiKey;
     private final MinecraftNOC plugin;
+    private final String pngWidth;
+    private final String pngHeight;
 
     public GrafanaClientImpl(MinecraftNOC main) {
         FileConfiguration config = main.getConfig();
-        grafanaBaseUrl = HttpUrl.parse(config.get("grafana.baseurl").toString());
-        apiKey = config.get("grafana.apikey").toString();
+        grafanaBaseUrl = HttpUrl.parse(Objects.requireNonNull(config.get("grafana.baseurl")).toString());
+        apiKey = Objects.requireNonNull(config.get("grafana.apikey")).toString();
+        pngWidth = Objects.requireNonNull(config.get("grafana.pngwidth")).toString();
+        pngHeight = Objects.requireNonNull(config.get("grafana.pngheight")).toString();
         plugin = main;
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
@@ -70,31 +76,46 @@ public class GrafanaClientImpl {
         client = builder.build();
     }
 
-    public CompletableFuture<byte[]> renderPngForPanel(String dashboardUid, String panelId, int width, int height, long from, long to, String utcOffset) {
+    public CompletableFuture<BufferedImage> renderPngForPanel(String dashboardUid, String panelId, int mapId, long from, long to, String utcOffset) {
         final HttpUrl.Builder builder = grafanaBaseUrl.newBuilder()
-                .addPathSegment("render")
-                .addPathSegment("d-solo")
-                .addPathSegment(dashboardUid);
+                .addPathSegments(dashboardUid);
 
         // Query parameters
         builder.addQueryParameter("panelId", panelId)
-                .addQueryParameter("from", Long.toString(from))
-                .addQueryParameter("to", Long.toString(to))
-                .addQueryParameter("width", Integer.toString(width))
-                .addQueryParameter("height", Integer.toString(height))
+//                .addQueryParameter("from", Long.toString(from))
+//                .addQueryParameter("to", Long.toString(to))
+                .addQueryParameter("width", pngWidth)
+                .addQueryParameter("height", pngHeight)
                 // Set a render timeout equal to the client's read timeout
                 .addQueryParameter("timeout", Integer.toString(10))
-                .addQueryParameter("theme", "light"); // Use the light theme
-        if (!Strings.isNullOrEmpty(utcOffset)) {
-            builder.addQueryParameter("tz", utcOffset);
-        }
+                .addQueryParameter("theme", "dark"); // everything's better in the dark ^_^
+
+        Bukkit.getLogger().log(Level.SEVERE, builder.build().toString());
 
         final Request request = new Request.Builder()
                 .url(builder.build())
                 .addHeader("Authorization", "Bearer " + this.apiKey)
                 .build();
 
-        final CompletableFuture<byte[]> future = new CompletableFuture<>();
+        Location loc = plugin.getCurrentEntity().getLocation();
+        int X = loc.getBlockX();
+        int Y = loc.getBlockY();
+        int Z = loc.getBlockZ();
+        String pos = X + "," + Y + "," + Z;
+
+        String path = "images." + pos;
+        FileConfiguration config = plugin.getConfig();
+        config.set(path + ".panel", panelId);
+        config.set(path + ".map", mapId);
+        plugin.saveConfig();
+
+        ItemStack items = ((ItemFrame)plugin.getCurrentEntity()).getItem();
+        MapMeta meta = (MapMeta)(items.getItemMeta());
+        if(meta.hasMapView()) {
+            plugin.getMapRenderer().applyToMap(meta.getMapView());
+        }
+
+        final CompletableFuture<BufferedImage> future = new CompletableFuture<>();
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -113,7 +134,18 @@ public class GrafanaClientImpl {
                     }
 
                     try (InputStream is = responseBody.byteStream()) {
-                        future.complete(inputStreamToByteArray(is, plugin.getCurrentEntity(), plugin.getConfig()));
+                        future.complete(ImageIO.read(is));
+
+                        plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                            try {
+                                BufferedImage img = MapPalette.resizeImage(future.get());
+                                plugin.getMapRenderer().setMapImage(mapId, img);
+                                Bukkit.getLogger().log(Level.INFO, "Got PNG");
+                            } catch(InterruptedException | ExecutionException e) {
+                                Bukkit.getLogger().log(Level.SEVERE, e.getLocalizedMessage());
+                            }
+                        });
+
                     } catch (IOException e) {
                         future.completeExceptionally(e);
                     }
@@ -121,30 +153,6 @@ public class GrafanaClientImpl {
             }
         });
         return future;
-    }
-
-    private static byte[] inputStreamToByteArray(InputStream is, Entity ent, FileConfiguration cfg) throws IOException {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        int nRead;
-        byte[] data = new byte[1024];
-        while ((nRead = is.read(data, 0, data.length)) != -1) {
-            buffer.write(data, 0, nRead);
-        }
-        buffer.flush();
-
-        Location loc = ent.getLocation();
-        int X = loc.getBlockX();
-        int Y = loc.getBlockY();
-        int Z = loc.getBlockZ();
-        String pos = X + "," + Y + "," + Z;
-        Bukkit.getLogger().log(Level.WARNING, "Setting entity at " + pos);
-
-        // save the image file and set it as the custom map image
-
-        String path = "images." + pos;
-        cfg.set(path, "png"); // FIXME
-
-        return buffer.toByteArray();
     }
 
     private static OkHttpClient.Builder configureToIgnoreCertificate(OkHttpClient.Builder builder) {
