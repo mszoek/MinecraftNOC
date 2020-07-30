@@ -47,15 +47,18 @@ import okhttp3.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapPalette;
+import org.bukkit.map.MapView;
 import org.json.*;
 
 public class GrafanaClientImpl {
     private final OkHttpClient client;
     private final HttpUrl grafanaBaseUrl;
+    private final String dashboardUid;
     private final String apiKey;
     private final MinecraftNOC plugin;
     private final String pngWidth;
@@ -67,6 +70,7 @@ public class GrafanaClientImpl {
         apiKey = Objects.requireNonNull(config.get("grafana.apikey")).toString();
         pngWidth = Objects.requireNonNull(config.get("grafana.pngwidth")).toString();
         pngHeight = Objects.requireNonNull(config.get("grafana.pngheight")).toString();
+        dashboardUid = Objects.requireNonNull(config.get("grafana.dashboard")).toString();
         plugin = main;
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
@@ -76,28 +80,23 @@ public class GrafanaClientImpl {
         client = builder.build();
     }
 
-    public CompletableFuture<BufferedImage> renderPngForPanel(String dashboardUid, String panelId, int mapId, long from, long to, String utcOffset) {
+    public CompletableFuture<BufferedImage> renderPngForPanel(Location loc, MapView map, String panelId) {
         final HttpUrl.Builder builder = grafanaBaseUrl.newBuilder()
                 .addPathSegments(dashboardUid);
 
         // Query parameters
         builder.addQueryParameter("panelId", panelId)
-//                .addQueryParameter("from", Long.toString(from))
-//                .addQueryParameter("to", Long.toString(to))
                 .addQueryParameter("width", pngWidth)
                 .addQueryParameter("height", pngHeight)
                 // Set a render timeout equal to the client's read timeout
                 .addQueryParameter("timeout", Integer.toString(10))
                 .addQueryParameter("theme", "dark"); // everything's better in the dark ^_^
 
-        Bukkit.getLogger().log(Level.SEVERE, builder.build().toString());
-
         final Request request = new Request.Builder()
                 .url(builder.build())
                 .addHeader("Authorization", "Bearer " + this.apiKey)
                 .build();
 
-        Location loc = plugin.getCurrentEntity().getLocation();
         int X = loc.getBlockX();
         int Y = loc.getBlockY();
         int Z = loc.getBlockZ();
@@ -106,14 +105,10 @@ public class GrafanaClientImpl {
         String path = "images." + pos;
         FileConfiguration config = plugin.getConfig();
         config.set(path + ".panel", panelId);
-        config.set(path + ".map", mapId);
+        config.set(path + ".map", map.getId());
         plugin.saveConfig();
 
-        ItemStack items = ((ItemFrame)plugin.getCurrentEntity()).getItem();
-        MapMeta meta = (MapMeta)(items.getItemMeta());
-        if(meta.hasMapView()) {
-            plugin.getMapRenderer().applyToMap(meta.getMapView());
-        }
+        plugin.getMapRenderer().applyToMap(map);
 
         final CompletableFuture<BufferedImage> future = new CompletableFuture<>();
         client.newCall(request).enqueue(new Callback() {
@@ -137,8 +132,7 @@ public class GrafanaClientImpl {
                         future.complete(ImageIO.read(is));
                         try {
                             BufferedImage img = MapPalette.resizeImage(future.get());
-                            plugin.getMapRenderer().setMapImage(mapId, img);
-                            Bukkit.getLogger().log(Level.INFO, "Got PNG");
+                            plugin.getMapRenderer().setMapImage(map.getId(), img);
                         } catch(InterruptedException | ExecutionException e) {
                             Bukkit.getLogger().log(Level.SEVERE, e.getLocalizedMessage());
                         }

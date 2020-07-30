@@ -7,5 +7,7 @@ grafana:
 metrics:
   baseurl: http://localhost/api/metrics/
   apikey: 12345
+update:
+  interval: 60000
 signs:
 images:

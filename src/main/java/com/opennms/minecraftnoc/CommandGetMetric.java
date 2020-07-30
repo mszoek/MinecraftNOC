@@ -5,11 +5,11 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 public class CommandGetMetric implements CommandExecutor {
-    private final MetricsClientImpl metricsClient;
+    private final MinecraftNOC plugin;
 
     public CommandGetMetric(MinecraftNOC main) {
         FileConfiguration config = main.getConfig();
-        metricsClient = new MetricsClientImpl(main);
+        plugin = main;
     }
 
     public boolean onCommand(CommandSender cs, Command c, String label, String[] args) {
@@ -17,7 +17,7 @@ public class CommandGetMetric implements CommandExecutor {
             Player p = (Player) cs;
 
             p.sendMessage(ChatHelper.format("Fetching metric value"));
-            metricsClient.getMetric(args[0], args[1], args[2]);
+            plugin.getMetricsClient().getMetric(args[0], args[1], args[2], plugin.getCurrentBlock());
             return true;
         } else {
             // Sender is console

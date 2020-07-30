@@ -16,6 +16,6 @@ public class MapListener implements Listener {
     public void onMapInitialize(MapInitializeEvent event) {
         MapView map = event.getMap();
         plugin.getServer().broadcastMessage("[MapListener] Map " + map.getId() + " initialized.");
-//      plugin.getMapRenderer().applyToMap(map);
+        plugin.addMap(map.getId(), map);
     }
 }

@@ -43,7 +43,7 @@ public class MetricsClientImpl {
         client = builder.build();
     }
 
-    public CompletableFuture<String> getMetric(String title, String url, String jsonFilter) {
+    public CompletableFuture<String> getMetric(String title, String url, String jsonFilter, Block block) {
         HttpUrl finalUrl = HttpUrl.parse(metricBaseUrl + url);
         final Request request = new Request.Builder()
                 .url(finalUrl)
@@ -51,7 +51,7 @@ public class MetricsClientImpl {
                 .addHeader("Accept", "application/json")
                 .build();
 
-        Location loc = plugin.getCurrentBlock().getLocation();
+        Location loc = block.getLocation();
         int X = loc.getBlockX();
         int Y = loc.getBlockY();
         int Z = loc.getBlockZ();
@@ -81,7 +81,7 @@ public class MetricsClientImpl {
                     }
 
                     try (InputStream is = responseBody.byteStream()) {
-                        Block block = plugin.getCurrentBlock();
+                        //Block block = plugin.getCurrentBlock();
                         future.complete(inputStreamToByteArray(is, jsonFilter));
                         plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
                             Sign s = (Sign)block.getState();
