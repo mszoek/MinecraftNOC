@@ -135,17 +135,13 @@ public class GrafanaClientImpl {
 
                     try (InputStream is = responseBody.byteStream()) {
                         future.complete(ImageIO.read(is));
-
-                        plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
-                            try {
-                                BufferedImage img = MapPalette.resizeImage(future.get());
-                                plugin.getMapRenderer().setMapImage(mapId, img);
-                                Bukkit.getLogger().log(Level.INFO, "Got PNG");
-                            } catch(InterruptedException | ExecutionException e) {
-                                Bukkit.getLogger().log(Level.SEVERE, e.getLocalizedMessage());
-                            }
-                        });
-
+                        try {
+                            BufferedImage img = MapPalette.resizeImage(future.get());
+                            plugin.getMapRenderer().setMapImage(mapId, img);
+                            Bukkit.getLogger().log(Level.INFO, "Got PNG");
+                        } catch(InterruptedException | ExecutionException e) {
+                            Bukkit.getLogger().log(Level.SEVERE, e.getLocalizedMessage());
+                        }
                     } catch (IOException e) {
                         future.completeExceptionally(e);
                     }
