@@ -108,8 +108,6 @@ public class GrafanaClientImpl {
         config.set(path + ".map", map.getId());
         plugin.saveConfig();
 
-        plugin.getMapRenderer().applyToMap(map);
-
         final CompletableFuture<BufferedImage> future = new CompletableFuture<>();
         client.newCall(request).enqueue(new Callback() {
             @Override
@@ -133,6 +131,7 @@ public class GrafanaClientImpl {
                         try {
                             BufferedImage img = MapPalette.resizeImage(future.get());
                             plugin.getMapRenderer().setMapImage(map.getId(), img);
+                            plugin.getMapRenderer().applyToMap(map);
                         } catch(InterruptedException | ExecutionException e) {
                             Bukkit.getLogger().log(Level.SEVERE, e.getLocalizedMessage());
                         }
