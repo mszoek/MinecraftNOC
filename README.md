@@ -11,7 +11,7 @@ for metrics or Grafana panel ID for images. They can be edited the same way. Cli
 
 All configuration is saved in real time and loaded when the server starts. A worker thread updates the data at a user-defined interval.
 
-[image placeholder]
+![Image of a MinecraftNOC display](demo.png)
 
 ## Requirements and Compatibility
  * Java 11
