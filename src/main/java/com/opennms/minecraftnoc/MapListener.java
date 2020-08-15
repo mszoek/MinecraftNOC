@@ -12,10 +12,16 @@ public class MapListener implements Listener {
         this.plugin = main;
     }
 
+    /*
+     * FIXME: find a better way to identify NOC maps
+     * This is really really suboptimal. We add every map initialized
+     * in the world to the java map of spigot maps. Lots of memory can
+     * be used even though many of the maps will not be used for the
+     * NOC.
+     */
     @EventHandler
     public void onMapInitialize(MapInitializeEvent event) {
         MapView map = event.getMap();
-        plugin.getServer().broadcastMessage("[MapListener] Map " + map.getId() + " initialized.");
         plugin.addMap(map.getId(), map);
     }
 }

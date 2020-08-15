@@ -4,7 +4,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.map.MapCanvas;
 import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
-import org.bukkit.map.MinecraftFont;
 
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
@@ -23,7 +22,6 @@ public class NOCMapRenderer extends MapRenderer {
             return;
 
         canvas.drawImage(0, 0, mapImages.get(map.getId()));
-//        canvas.drawText(10, 10, MinecraftFont.Font, "§0;Map #"+map.getId()+" rendered!");
     }
 
     public void applyToMap(MapView map) {

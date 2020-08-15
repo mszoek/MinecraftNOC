@@ -4,15 +4,11 @@ package com.opennms.minecraftnoc;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 
-import java.util.Collection;
 import java.util.Objects;
 import java.util.logging.Level;
 

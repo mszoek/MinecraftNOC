@@ -12,7 +12,6 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.meta.MapMeta;
 
 public class ClickListener implements Listener {
     private MinecraftNOC plugin;
@@ -21,16 +20,20 @@ public class ClickListener implements Listener {
         this.plugin = main;
     }
 
+    public static boolean hasToolEquipped(Player p) {
+        return (p.getInventory().getItemInMainHand().getType() == Material.STICK);
+    }
+
     @EventHandler
     public void onEntityInteract(PlayerInteractEvent e) {
         if(e.getAction() == Action.LEFT_CLICK_AIR) {
-            if(e.getPlayer().getInventory().getItemInMainHand().getType() != Material.STICK) {
+            Player p = e.getPlayer();
+            if(!hasToolEquipped(p)) {
                 return;
             }
 
             plugin.clearCurrentBlock();
             plugin.clearCurrentEntity();
-            Player p = e.getPlayer();
             p.sendMessage(ChatHelper.format("Cleared current item and block"));
         }
     }
@@ -42,7 +45,7 @@ public class ClickListener implements Listener {
         }
 
         Player p = (Player)e.getDamager();
-        if(p.getInventory().getItemInMainHand().getType() != Material.STICK) {
+        if(!hasToolEquipped(p)) {
             return;
         }
 
@@ -60,7 +63,7 @@ public class ClickListener implements Listener {
     @EventHandler
     public void onBlockClick(BlockBreakEvent e) {
         Player p = e.getPlayer();
-        if(p.getInventory().getItemInMainHand().getType() != Material.STICK) {
+        if(!hasToolEquipped(p)) {
             return;
         }
 
