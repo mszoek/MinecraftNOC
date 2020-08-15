@@ -40,6 +40,10 @@ All configuration is saved in real time and loaded when the server starts. A wor
   * Permissions
   * Custom selection wand item and command to get it
   * Additional image sources (e.g. Azure dashboards)
+  * Commands to manage dashboard URLs
+  * Simplified REST URL entry and canned queries
+  * Remove maps/signs from config on block break event
+  * Support REST requests with POST and JEXL expressions
   
   ## Special Thanks
   Chris Manigan for the original idea to do a virtual NOC in Minecraft, wrangling OpenNMS and Grafana, and building the NOC room.
