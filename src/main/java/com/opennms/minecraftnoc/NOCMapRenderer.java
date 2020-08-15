@@ -18,8 +18,10 @@ public class NOCMapRenderer extends MapRenderer {
 
     @Override
     public void render(MapView map, MapCanvas canvas, Player player) {
-        if(!mapImages.containsKey(map.getId()))
+        if(!mapImages.containsKey(map.getId())) {
+            System.out.println("MAPRENDER: no image for id "+map.getId());
             return;
+        }
 
         canvas.drawImage(0, 0, mapImages.get(map.getId()));
     }
@@ -29,9 +31,11 @@ public class NOCMapRenderer extends MapRenderer {
             map.removeRenderer(renderer);
         }
         map.addRenderer(this);
+        System.out.println("MAPRENDER: set renderer for id "+map.getId());
     }
 
     public void setMapImage(int mapId, BufferedImage image) {
         mapImages.put(mapId, image);
+        System.out.println("MAPRENDER: set image for id "+mapId);
     }
 }

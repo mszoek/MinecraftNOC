@@ -33,7 +33,7 @@ public class CommandGetPNG implements CommandExecutor {
             ItemStack items = frame.getItem();
             MapMeta meta = (MapMeta)(items.getItemMeta());
             if(meta.hasMapView()) {
-                grafanaClient.renderPngForPanel(loc, meta.getMapView(), args[0]);
+                grafanaClient.renderPngForPanel(loc, meta.getMapView(), null, args[0]);
             }
             return true;
         } else {

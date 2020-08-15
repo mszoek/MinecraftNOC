@@ -35,20 +35,21 @@ public class Updater implements Runnable {
             for(String key : signs.getKeys(false)) {
                 String[] pos = key.split(",");
                 Block block = world.getBlockAt(Integer.parseInt(pos[0]), Integer.parseInt(pos[1]), Integer.parseInt(pos[2]));
-                String title = signs.get(key+".title").toString();
-                String url = signs.get(key+".url").toString();
-                String filter = signs.get(key+".filter").toString();
+                String title = signs.getString(key+".title");
+                String url = signs.getString(key+".url");
+                String filter = signs.getString(key+".filter");
                 plugin.getMetricsClient().getMetric(title, url, filter, block);
             }
 
             ConfigurationSection images = config.getConfigurationSection("images");
             for(String key : images.getKeys(false)) {
-                String panel = images.get(key+".panel").toString();
-                Integer map = Integer.parseInt(images.get(key+".map").toString());
+                String panel = images.getString(key+".panel");
+                int map = images.getInt(key+".map");
                 if(plugin.hasMap(map)) {
                     String[] pos = key.split(",");
                     Location loc = new Location(world, Double.parseDouble(pos[0]), Double.parseDouble(pos[1]), Double.parseDouble(pos[2]));
-                    plugin.getGrafanaClient().renderPngForPanel(loc, plugin.getMap(map), panel);
+                    String dashName = Objects.requireNonNull(images.getString(key + ".dashname"));
+                    plugin.getGrafanaClient().renderPngForPanel(loc, plugin.getMap(map), dashName, panel);
                 }
             }
 

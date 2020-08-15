@@ -37,6 +37,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.cert.CertificateException;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -46,6 +47,7 @@ import java.util.logging.Level;
 import okhttp3.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.map.MapPalette;
 import org.bukkit.map.MapView;
@@ -54,11 +56,12 @@ import org.json.*;
 public class GrafanaClientImpl {
     private final OkHttpClient client;
     private final HttpUrl grafanaBaseUrl;
-    private final String dashboardUid;
     private final String apiKey;
     private final MinecraftNOC plugin;
     private final String pngWidth;
     private final String pngHeight;
+    private String defaultDashboardPath;
+    private String defaultDashboardName;
 
     public GrafanaClientImpl(MinecraftNOC main) {
         FileConfiguration config = main.getConfig();
@@ -66,7 +69,19 @@ public class GrafanaClientImpl {
         apiKey = Objects.requireNonNull(config.get("grafana.apikey")).toString();
         pngWidth = Objects.requireNonNull(config.get("grafana.pngwidth")).toString();
         pngHeight = Objects.requireNonNull(config.get("grafana.pngheight")).toString();
-        dashboardUid = Objects.requireNonNull(config.get("grafana.dashboard")).toString();
+
+        Map<String, Object> boards = config.getConfigurationSection("dashboards").getValues(false);
+        boards.forEach((k,v) -> {
+            ConfigurationSection c = (ConfigurationSection)v;
+            if (Objects.requireNonNull(c.get("type")).toString().equalsIgnoreCase("grafana")
+                    && c.getBoolean("default", false)) {
+                defaultDashboardPath = Objects.requireNonNull(c.get("path")).toString();
+                defaultDashboardName = k;
+                main.getLogger().log(Level.INFO, "Using default dashboard '" + k + "'");
+            }
+        });
+
+       
         plugin = main;
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
@@ -76,9 +91,15 @@ public class GrafanaClientImpl {
         client = builder.build();
     }
 
-    public CompletableFuture<BufferedImage> renderPngForPanel(Location loc, MapView map, String panelId) {
-        final HttpUrl.Builder builder = grafanaBaseUrl.newBuilder()
-                .addPathSegments(dashboardUid);
+    public CompletableFuture<BufferedImage> renderPngForPanel(Location loc, MapView map, String dashboardName, String panelId) {
+        final HttpUrl.Builder builder = grafanaBaseUrl.newBuilder();
+
+        if(dashboardName == null) {
+            builder.addPathSegments(defaultDashboardPath); // use the currently selected one
+        } else {
+            String path = plugin.getConfig().getString("dashboards." + dashboardName + ".path");
+            builder.addPathSegments(path);
+        }
 
         // Query parameters
         builder.addQueryParameter("panelId", panelId)
@@ -102,6 +123,7 @@ public class GrafanaClientImpl {
         FileConfiguration config = plugin.getConfig();
         config.set(path + ".panel", panelId);
         config.set(path + ".map", map.getId());
+        config.set(path + ".dashname", dashboardName == null ? defaultDashboardName : dashboardName);
         plugin.saveConfig();
 
         final CompletableFuture<BufferedImage> future = new CompletableFuture<>();
