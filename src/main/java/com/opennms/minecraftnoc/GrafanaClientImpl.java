@@ -81,12 +81,11 @@ public class GrafanaClientImpl {
             }
         });
 
-       
         plugin = main;
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .connectTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(3, TimeUnit.SECONDS);
+                .readTimeout(20, TimeUnit.SECONDS);
         builder = configureToIgnoreCertificate(builder);
         client = builder.build();
     }
@@ -129,9 +128,7 @@ public class GrafanaClientImpl {
         final CompletableFuture<BufferedImage> future = new CompletableFuture<>();
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                future.completeExceptionally(e);
-            }
+            public void onFailure(Call call, IOException e) { future.completeExceptionally(e); }
 
             @Override
             public void onResponse(Call call, Response response) {
