@@ -17,7 +17,7 @@ public class CommandGetPNG implements CommandExecutor {
 
     public CommandGetPNG(MinecraftNOC main) {
         plugin = main;
-        grafanaClient = new GrafanaClientImpl(main);
+        grafanaClient = main.getGrafanaClient();
     }
 
     public boolean onCommand(CommandSender cs, Command c, String label, String[] args) {

@@ -36,6 +36,7 @@ public final class MinecraftNOC extends JavaPlugin {
         pm.registerEvents(new MapListener(this), this);
         getCommand("getpng").setExecutor(new CommandGetPNG(this));
         getCommand("getmetric").setExecutor(new CommandGetMetric(this));
+        getCommand("dashboard").setExecutor(new CommandDashboard(this));
 
         mapRenderer = new NOCMapRenderer();
         updater = new Updater(this);

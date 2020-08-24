@@ -12,14 +12,11 @@ import java.util.Map;
 public class NOCMapRenderer extends MapRenderer {
     private Map<Integer, BufferedImage> mapImages;
 
-    public NOCMapRenderer() {
-        mapImages = new HashMap<>();
-    }
+    public NOCMapRenderer() { mapImages = new HashMap<>(); }
 
     @Override
     public void render(MapView map, MapCanvas canvas, Player player) {
         if(!mapImages.containsKey(map.getId())) {
-            System.out.println("MAPRENDER: no image for id "+map.getId());
             return;
         }
 
@@ -31,11 +28,7 @@ public class NOCMapRenderer extends MapRenderer {
             map.removeRenderer(renderer);
         }
         map.addRenderer(this);
-        System.out.println("MAPRENDER: set renderer for id "+map.getId());
     }
 
-    public void setMapImage(int mapId, BufferedImage image) {
-        mapImages.put(mapId, image);
-        System.out.println("MAPRENDER: set image for id "+mapId);
-    }
+    public void setMapImage(int mapId, BufferedImage image) { mapImages.put(mapId, image); }
 }

@@ -75,7 +75,7 @@ public class GrafanaClientImpl {
             ConfigurationSection c = (ConfigurationSection)v;
             if (Objects.requireNonNull(c.get("type")).toString().equalsIgnoreCase("grafana")
                     && c.getBoolean("default", false)) {
-                defaultDashboardPath = Objects.requireNonNull(c.get("path")).toString();
+                defaultDashboardPath = c.getString("path");
                 defaultDashboardName = k;
                 main.getLogger().log(Level.INFO, "Using default dashboard '" + k + "'");
             }
@@ -88,6 +88,11 @@ public class GrafanaClientImpl {
                 .readTimeout(20, TimeUnit.SECONDS);
         builder = configureToIgnoreCertificate(builder);
         client = builder.build();
+    }
+
+    public void setDashboard(String dashboardName, String dashboardPath) {
+        defaultDashboardPath = dashboardPath;
+        defaultDashboardName = dashboardName;
     }
 
     public CompletableFuture<BufferedImage> renderPngForPanel(Location loc, MapView map, String dashboardName, String panelId) {
