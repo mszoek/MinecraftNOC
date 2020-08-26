@@ -37,8 +37,10 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.cert.CertificateException;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Vector;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -50,6 +52,7 @@ import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.map.MapPalette;
+import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 import org.json.*;
 
@@ -118,6 +121,7 @@ public class GrafanaClientImpl {
                 .addHeader("Authorization", "Bearer " + this.apiKey)
                 .build();
 
+/*
         int X = loc.getBlockX();
         int Y = loc.getBlockY();
         int Z = loc.getBlockZ();
@@ -129,6 +133,7 @@ public class GrafanaClientImpl {
         config.set(path + ".map", map.getId());
         config.set(path + ".dashname", dashboardName == null ? defaultDashboardName : dashboardName);
         plugin.saveConfig();
+*/
 
         final CompletableFuture<BufferedImage> future = new CompletableFuture<>();
         client.newCall(request).enqueue(new Callback() {
@@ -149,9 +154,8 @@ public class GrafanaClientImpl {
                     try (InputStream is = responseBody.byteStream()) {
                         future.complete(ImageIO.read(is));
                         try {
-                            BufferedImage img = MapPalette.resizeImage(future.get());
-                            plugin.getMapRenderer().setMapImage(map.getId(), img);
-                            plugin.getMapRenderer().applyToMap(map);
+                            BufferedImage img = future.get();
+                            splitImageToMaps(img, loc);
                         } catch(InterruptedException | ExecutionException e) {
                             Bukkit.getLogger().log(Level.SEVERE, e.getLocalizedMessage());
                         }
@@ -162,6 +166,20 @@ public class GrafanaClientImpl {
             }
         });
         return future;
+    }
+
+    private void splitImageToMaps(BufferedImage img, Location topleft) {
+        ConfigurationSection images = plugin.getConfig().getConfigurationSection("images");
+        ConfigurationSection c = images.getConfigurationSection(topleft.getBlockX()+","+topleft.getBlockY()+","+topleft.getBlockZ());
+        List<Integer> mapIds = c.getIntegerList("maps");
+
+        NOCMapRenderer renderer = plugin.getMapRenderer();
+        mapIds.forEach(x -> {
+            MapView map = plugin.getMap(x);
+            BufferedImage tile = MapPalette.resizeImage(img);
+            renderer.setMapImage(x, tile);
+            renderer.applyToMap(map);
+        });
     }
 
     private static OkHttpClient.Builder configureToIgnoreCertificate(OkHttpClient.Builder builder) {

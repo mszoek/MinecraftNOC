@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class NOCMapRenderer extends MapRenderer {
-    private Map<Integer, BufferedImage> mapImages;
+    private final Map<Integer, BufferedImage> mapImages;
 
     public NOCMapRenderer() { mapImages = new HashMap<>(); }
 
