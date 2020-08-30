@@ -43,14 +43,13 @@ public class Updater implements Runnable {
 
             ConfigurationSection images = config.getConfigurationSection("images");
             for(String key : images.getKeys(false)) {
-                int map = images.getInt(key+".map");
-                if(plugin.hasMap(map)) {
-                    String[] pos = key.split(",");
-                    Location loc = new Location(world, Double.parseDouble(pos[0]), Double.parseDouble(pos[1]), Double.parseDouble(pos[2]));
-                    String panel = images.getString(key+".panel");
-                    String dashName = images.getString(key + ".dashname");
-                    plugin.getGrafanaClient().renderPngForPanel(loc, plugin.getMap(map), dashName, panel);
-                }
+                String[] pos = key.split(",");
+                Location loc = new Location(world, Double.parseDouble(pos[0]), Double.parseDouble(pos[1]), Double.parseDouble(pos[2]));
+                String panel = images.getString(key+".panel");
+                String dashName = images.getString(key + ".dashname");
+                int width = images.getInt(key + ".width", 1);
+                int height = images.getInt(key+".height", 1);
+                plugin.getGrafanaClient().renderPngForPanel(loc, dashName, panel, width, height);
             }
 
             try {

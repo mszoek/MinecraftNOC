@@ -10,8 +10,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+
+import java.util.logging.Level;
 
 public class ClickListener implements Listener {
     private MinecraftNOC plugin;
@@ -54,8 +58,30 @@ public class ClickListener implements Listener {
             return;
         }
 
-        plugin.setCurrentEntity(e.getEntity());
-        p.sendMessage(ChatHelper.format("Current item set!"));
+        plugin.setCurrentEntityTopLeft(frame);
+        p.sendMessage(ChatHelper.format("Item top left position set!"));
+
+        e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onEntityRightClick(PlayerInteractEntityEvent e) {
+        if(e.getRightClicked().getType() != EntityType.ITEM_FRAME) {
+            return;
+        }
+
+        Player p = e.getPlayer();
+        if(!hasToolEquipped(p)) {
+            return;
+        }
+
+        ItemFrame frame = (ItemFrame)e.getRightClicked();
+        if(frame.getItem().getType() != Material.FILLED_MAP) {
+            return;
+        }
+
+        plugin.setCurrentEntityBotRight(frame);
+        p.sendMessage(ChatHelper.format("Item bottom right position set!"));
 
         e.setCancelled(true);
     }

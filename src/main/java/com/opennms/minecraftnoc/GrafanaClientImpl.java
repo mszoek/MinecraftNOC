@@ -60,9 +60,8 @@ public class GrafanaClientImpl {
     private final OkHttpClient client;
     private final HttpUrl grafanaBaseUrl;
     private final String apiKey;
+    private final String theme;
     private final MinecraftNOC plugin;
-    private final String pngWidth;
-    private final String pngHeight;
     private String defaultDashboardPath;
     private String defaultDashboardName;
 
@@ -70,8 +69,7 @@ public class GrafanaClientImpl {
         FileConfiguration config = main.getConfig();
         grafanaBaseUrl = HttpUrl.parse(Objects.requireNonNull(config.get("grafana.baseurl")).toString());
         apiKey = Objects.requireNonNull(config.get("grafana.apikey")).toString();
-        pngWidth = Objects.requireNonNull(config.get("grafana.pngwidth")).toString();
-        pngHeight = Objects.requireNonNull(config.get("grafana.pngheight")).toString();
+        theme = config.getString("grafana.theme", "dark"); // everything's better in the dark ^_^
 
         Map<String, Object> boards = config.getConfigurationSection("dashboards").getValues(false);
         boards.forEach((k,v) -> {
@@ -98,7 +96,14 @@ public class GrafanaClientImpl {
         defaultDashboardName = dashboardName;
     }
 
+    public String getCurrentDashboardName() { return defaultDashboardName; }
+    public String getCurrentDashboardPath() { return defaultDashboardPath; }
+
     public CompletableFuture<BufferedImage> renderPngForPanel(Location loc, MapView map, String dashboardName, String panelId) {
+        return renderPngForPanel(loc, dashboardName, panelId, 1, 1);
+    }
+
+    public CompletableFuture<BufferedImage> renderPngForPanel(Location loc, String dashboardName, String panelId, int width, int height) {
         final HttpUrl.Builder builder = grafanaBaseUrl.newBuilder();
 
         if(dashboardName == null) {
@@ -110,30 +115,16 @@ public class GrafanaClientImpl {
 
         // Query parameters
         builder.addQueryParameter("panelId", panelId)
-                .addQueryParameter("width", pngWidth)
-                .addQueryParameter("height", pngHeight)
+                .addQueryParameter("width", String.valueOf(128*width))
+                .addQueryParameter("height", String.valueOf(128*height))
                 // Set a render timeout equal to the client's read timeout
                 .addQueryParameter("timeout", Integer.toString(10))
-                .addQueryParameter("theme", "dark"); // everything's better in the dark ^_^
+                .addQueryParameter("theme", theme);
 
         final Request request = new Request.Builder()
                 .url(builder.build())
                 .addHeader("Authorization", "Bearer " + this.apiKey)
                 .build();
-
-/*
-        int X = loc.getBlockX();
-        int Y = loc.getBlockY();
-        int Z = loc.getBlockZ();
-        String pos = X + "," + Y + "," + Z;
-
-        String path = "images." + pos;
-        FileConfiguration config = plugin.getConfig();
-        config.set(path + ".panel", panelId);
-        config.set(path + ".map", map.getId());
-        config.set(path + ".dashname", dashboardName == null ? defaultDashboardName : dashboardName);
-        plugin.saveConfig();
-*/
 
         final CompletableFuture<BufferedImage> future = new CompletableFuture<>();
         client.newCall(request).enqueue(new Callback() {
@@ -172,14 +163,23 @@ public class GrafanaClientImpl {
         ConfigurationSection images = plugin.getConfig().getConfigurationSection("images");
         ConfigurationSection c = images.getConfigurationSection(topleft.getBlockX()+","+topleft.getBlockY()+","+topleft.getBlockZ());
         List<Integer> mapIds = c.getIntegerList("maps");
+        final int width = c.getInt("width", 1);
+        final int height = c.getInt("height", 1);
+        plugin.getLogger().log(Level.WARNING, "image width:"+width+" height:"+height);
 
         NOCMapRenderer renderer = plugin.getMapRenderer();
-        mapIds.forEach(x -> {
-            MapView map = plugin.getMap(x);
-            BufferedImage tile = MapPalette.resizeImage(img);
-            renderer.setMapImage(x, tile);
-            renderer.applyToMap(map);
-        });
+
+        int mapindex = 0;
+        for (int x = 0; x < width; x++) {
+            for(int y = 0; y < height; y++) {
+                MapView map = plugin.getMap(mapIds.get(mapindex));
+                mapindex++;
+
+                BufferedImage tile = MapPalette.resizeImage(img.getSubimage(x * 128, y * 128, 128, 128));
+                renderer.setMapImage(map.getId(), tile);
+                renderer.applyToMap(map);
+            }
+        }
     }
 
     private static OkHttpClient.Builder configureToIgnoreCertificate(OkHttpClient.Builder builder) {

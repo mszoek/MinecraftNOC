@@ -12,7 +12,8 @@ import java.util.Map;
 
 public final class MinecraftNOC extends JavaPlugin {
     private Block currentBlock;
-    private Entity currentEntity;
+    private Entity currentEntityTopLeft;
+    private Entity currentEntityBotRight;
     private MetricsClientImpl metricsClient;
     private GrafanaClientImpl grafanaClient;
     private NOCMapRenderer mapRenderer;
@@ -25,7 +26,7 @@ public final class MinecraftNOC extends JavaPlugin {
         saveDefaultConfig();
 
         currentBlock = null;
-        currentEntity = null;
+        currentEntityTopLeft = currentEntityBotRight = null;
         initializedMaps = new HashMap<>();
 
         metricsClient = new MetricsClientImpl(this);
@@ -51,9 +52,12 @@ public final class MinecraftNOC extends JavaPlugin {
     public void setCurrentBlock(Block block) { currentBlock = block; }
     public void clearCurrentBlock() { currentBlock = null; }
 
-    public Entity getCurrentEntity() { return currentEntity; }
-    public void setCurrentEntity(Entity ent) { currentEntity = ent; }
-    public void clearCurrentEntity() { currentEntity = null; }
+    public Entity getCurrentEntity() { return currentEntityTopLeft; }
+    public Entity getCurrentEntityTopLeft() { return currentEntityTopLeft; }
+    public Entity getCurrentEntityBotRight() { return currentEntityBotRight; }
+    public void setCurrentEntityTopLeft(Entity ent) { currentEntityTopLeft = ent; }
+    public void setCurrentEntityBotRight(Entity ent) { currentEntityBotRight = ent; }
+    public void clearCurrentEntity() { currentEntityTopLeft = currentEntityBotRight = null; }
 
     public MetricsClientImpl getMetricsClient() { return metricsClient; }
     public GrafanaClientImpl getGrafanaClient() { return grafanaClient; }

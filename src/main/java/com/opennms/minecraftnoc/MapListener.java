@@ -5,6 +5,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.server.MapInitializeEvent;
 import org.bukkit.map.MapView;
 
+import java.util.logging.Level;
+
 public class MapListener implements Listener {
     private MinecraftNOC plugin;
 
@@ -23,5 +25,6 @@ public class MapListener implements Listener {
     public void onMapInitialize(MapInitializeEvent event) {
         MapView map = event.getMap();
         plugin.addMap(map.getId(), map);
+        plugin.getLogger().log(Level.INFO, "Map " + map.getId() + " initialized");
     }
 }
