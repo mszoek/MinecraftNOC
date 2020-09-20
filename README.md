@@ -22,6 +22,8 @@ All configuration is saved in real time and loaded when the server starts. A wor
 ## Commands
  * `/getpng panelID`  -- load the panel with the given `ID` from the current dashboard
  * `/getmetric Title partialURL JsonPointer` -- fetch a JSON result from the REST API defined by the base URL in `config.yml` plus `partialURL`, extracting the property defined by `JsonPointer`
+   * `/getmetric nodesnmp Title nodeID property` -- helper for getting node SNMP properties such as `loadavg5`
+   * `/getmetric ifsnmp Title nodeID interfaceID property` -- helper for getting interface statistic such as `ifHCInOctets`
  * `/dashboard Operation [Tag] [URL]` -- manage Grafana dashboards from which we pull images
    * `/dashboard list` -- show the configured dashboard tags and URL paths
    * `/dashboard select Tag` -- set Tag as the current dashboard for /getpng
@@ -43,7 +45,6 @@ All configuration is saved in real time and loaded when the server starts. A wor
   * Permissions
   * Custom selection wand item and command to get it
   * Additional image sources (e.g. Azure dashboards)
-  * Simplified REST URL entry and canned queries
   * Remove maps/signs from config on block break event
   * Support REST requests with POST and JEXL expressions
   
