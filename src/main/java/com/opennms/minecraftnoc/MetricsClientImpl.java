@@ -91,15 +91,20 @@ public class MetricsClientImpl {
                                 int totalChars = 45;
                                 int line = 1;
 
-                                if(title.contentEquals("none")) {
+                                if(title.length() == 2 && title.startsWith("&")) {
                                     totalChars = 60; // no title! we can use all 4 lines
                                     line = 0;
                                 } else {
-                                    s.setLine(0, title);
+                                    s.setLine(0, ChatHelper.formatNP(title));
+                                }
+
+                                String colorCode = title.substring(title.length() - 2);
+                                if(!colorCode.startsWith("&")) {
+                                    colorCode = "";
                                 }
 
                                 for(int ch = 0; ch < Math.min(buf.length(), totalChars); ch += 16) {
-                                    s.setLine(line, buf.substring(ch, Math.min(buf.length(), ch + 15)));
+                                    s.setLine(line, ChatHelper.formatNP(colorCode + buf.substring(ch, Math.min(buf.length(), ch + 15))));
                                     line++;
                                 }
 

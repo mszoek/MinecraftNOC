@@ -7,4 +7,5 @@ public class ChatHelper {
     public static String format(String input) {
         return ChatColor.translateAlternateColorCodes('&', prefix+input);
     }
+    public static String formatNP(String input) { return ChatColor.translateAlternateColorCodes('&', input); }
 }
