@@ -35,7 +35,7 @@ All configuration is saved in real time and loaded when the server starts. A wor
  
   * Image rendering can lag the server even though it is in a thread
   * Very little error checking
-  * Removing a sign can cause plugin exception (delete it from config.yml first)
+  * Removing a sign at the wrong time can cause plugin exception
  
  ## Future Work
   * Robustify and optimize
@@ -45,7 +45,6 @@ All configuration is saved in real time and loaded when the server starts. A wor
   * Permissions
   * Custom selection wand item and command to get it
   * Additional image sources (e.g. Azure dashboards)
-  * Remove maps/signs from config on block break event
   * Support REST requests with POST and JEXL expressions
   
   ## Special Thanks
