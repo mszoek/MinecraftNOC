@@ -87,8 +87,26 @@ public class MetricsClientImpl {
                             Sign s = (Sign)block.getState();
                             try {
                                 String buf = future.get();
-                                s.setLine(0, title);
-                                s.setLine(2, buf.substring(0, Math.min(buf.length(), 15)));
+
+                                int totalChars = 45;
+                                int line = 1;
+
+                                if(title.contentEquals("none")) {
+                                    totalChars = 60; // no title! we can use all 4 lines
+                                    line = 0;
+                                } else {
+                                    s.setLine(0, title);
+                                }
+
+                                for(int ch = 0; ch < Math.min(buf.length(), totalChars); ch += 16) {
+                                    s.setLine(line, buf.substring(ch, Math.min(buf.length(), ch + 15)));
+                                    line++;
+                                }
+
+                                // clear any remaining lines
+                                for(int ch = line; ch < 4; ch++) {
+                                    s.setLine(ch, "");
+                                }
                                 s.update();
                             } catch(InterruptedException | ExecutionException e) {
                                 Bukkit.getLogger().log(Level.SEVERE, e.getLocalizedMessage());
