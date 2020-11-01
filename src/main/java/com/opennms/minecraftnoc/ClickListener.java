@@ -1,8 +1,10 @@
 package com.opennms.minecraftnoc;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
@@ -89,16 +91,27 @@ public class ClickListener implements Listener {
     @EventHandler
     public void onBlockClick(BlockBreakEvent e) {
         Player p = e.getPlayer();
-        if(!hasToolEquipped(p)) {
-            return;
-        }
-
-       Block b = e.getBlock();
+        Block b = e.getBlock();
         if (b.getState() instanceof Sign) {
-            plugin.setCurrentBlock(b);
-            p.sendMessage(ChatHelper.format("Current block set!"));
+            if (hasToolEquipped(p)) {
+                plugin.setCurrentBlock(b);
+                p.sendMessage(ChatHelper.format("Current block set!"));
+                e.setCancelled(true);
+            } else {
+                if(plugin.getCurrentBlock().equals(b)) {
+                    plugin.clearCurrentBlock();
+                }
+                Location loc = b.getLocation();
+                int X = loc.getBlockX();
+                int Y = loc.getBlockY();
+                int Z = loc.getBlockZ();
+                String pos = X + "," + Y + "," + Z;
 
-            e.setCancelled(true);
+                String path = "signs." + pos;
+                FileConfiguration config = plugin.getConfig();
+                config.set(path, null);
+                plugin.saveConfig();
+            }
         }
     }
 }
