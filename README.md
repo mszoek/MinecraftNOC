@@ -5,7 +5,9 @@ DevJam 2020 project: In-game NOC boards
 MinecraftNOC is a Spigot plugin that retrieves arbitrary values from the OpenNMS REST API and panel images from Grafana dashboards. Multiple dashboards are supported.
 These are displayed in game on signs and framed maps respectively, allowing the player to build a fully immersive collaborative virtual environment that displays real-world data. Signs and maps can be placed in any valid game location to allow for free design of the display. Images can span multiple framed maps to allow for larger sizes and rectangluar shapes.
 
-Metrics are added to the display by clicking a sign with the selection wand (a stick) then executing a command to pass in the partial REST URL. Images are added by placing framed maps in the desired shape, left-clicking the top left framed map and then right-clicking the bottom right framed map. All maps in the selected rectangle will be added to the tile set. Once selected, a command is executed to fetch and assign the image to the set of maps.
+Metrics are added to the display by clicking a sign with the selection wand (a stick) then executing a command to pass in the partial REST URL. The title takes the first line and the result will consume the remaining 3 lines of the sign (15 chars per line). Any remaining result is truncated. Passing in the special title `none` will omit the title and use all four lines for the result.
+
+Images are added by placing framed maps in the desired shape, left-clicking the top left framed map and then right-clicking the bottom right framed map. All maps in the selected rectangle will be added to the tile set. Once selected, a command is executed to fetch and assign the image to the set of maps.
 
 Left-clicking the air will clear the currently-selected object.
 
@@ -21,7 +23,7 @@ All configuration is saved in real time and loaded when the server starts. A wor
 
 ## Commands
  * `/getpng panelID`  -- load the panel with the given `ID` from the current dashboard
- * `/getmetric Title partialURL JsonPointer` -- fetch a JSON result from the REST API defined by the base URL in `config.yml` plus `partialURL`, extracting the property defined by `JsonPointer`
+ * `/getmetric Title partialURL JsonPointer` -- fetch a JSON result from the REST API defined by the base URL in `config.yml` plus `partialURL`, extracting the property defined by `JsonPointer`. The special title `none` will omit the title line and use the whole sign for the result.
    * `/getmetric nodesnmp Title nodeID property` -- helper for getting node SNMP properties such as `loadavg5`
    * `/getmetric ifsnmp Title nodeID interfaceID property` -- helper for getting interface statistic such as `ifHCInOctets`
  * `/dashboard Operation [Tag] [URL]` -- manage Grafana dashboards from which we pull images
@@ -40,7 +42,7 @@ All configuration is saved in real time and loaded when the server starts. A wor
  ## Future Work
   * Robustify and optimize
   * Multiple OpenNMS and Grafana instances
-  * Span larger text results across multiple sign lines/multiple signs
+  * Span larger text results across multiple signs
   * Scrolling and colored sign text
   * Permissions
   * Custom selection wand item and command to get it
